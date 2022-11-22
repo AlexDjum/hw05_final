@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  {% block title %}{{ post.author.get_full_name }}: "{{ post.text|truncatechars:30 }}..."{% endblock %}
+</head>
+
+<body>
+  {% block content %}
+  <main>
+    <div class="row">
+      {% include 'posts/includes/content.html' %}
+      {% include 'posts/includes/editing.html' %}
+      {% include 'posts/includes/comments.html' %}
+      </article>
+    </div>
+  </main>
+  {% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+{% if user == post.author %}
+<small>
+    <a href="{% url 'posts:post_edit' post.pk %}">Редактировать</a>
+</small><br>
+<small>
+    <a href="{% url 'posts:post_delete' post.pk%}">Удалить</a>
+</small>
+{% endif %}

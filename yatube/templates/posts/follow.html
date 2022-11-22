@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load thumbnail %}
+
+{% block title %}Подписки{% endblock %}
+{% block content %}
+{% include 'posts/includes/switcher.html' %}
+
+{% for post in page_obj %}
+{% include 'posts/includes/posts_list.html'%}
+{% endfor %}
+
+
+{% include 'includes/paginator.html' %}
+{% endblock %}
