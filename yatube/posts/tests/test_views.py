@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Comment, Group, Post
+from ..models import Comment, Follow, Group, Post
 from ..views import POST_COUNT
 
 User = get_user_model()
@@ -18,7 +18,7 @@ class CommentCreateExistTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='Noname')
+        cls.user = User.objects.create_user(username='Noname')  # type: ignore
         cls.guest_client = Client()
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
@@ -46,7 +46,7 @@ class PostPagesTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='Noname')
+        cls.user = User.objects.create_user(username='Noname')  # type: ignore
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
         cls.group_test = Group.objects.create(
@@ -211,7 +211,7 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create_user(username='Noname')
+        cls.user = User.objects.create_user(username='Noname')  # type: ignore
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
         cls.group_test = Group.objects.create(
@@ -260,3 +260,80 @@ class PaginatorViewsTest(TestCase):
         for page in page_list:
             response = self.authorized_client.get(page + '?page=2')
             self.assertEqual(len(response.context['page_obj']), count)
+
+
+class TestFollow(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user_1 = User.objects.create(username='User_1')
+        cls.user_2 = User.objects.create(username='User_2')
+        cls.user_3 = User.objects.create(username='User_3')
+        cls.authorized_client_1 = Client()
+        cls.authorized_client_1.force_login(cls.user_1)
+        cls.authorized_client_2 = Client()
+        cls.authorized_client_2.force_login(cls.user_2)
+        cls.group_test = Group.objects.create(
+            title='Тестовая группа',
+            slug='test',
+            description='Описание тестовой группы'
+        )
+        cls.post_test = Post.objects.create(
+            text='Тестовый пост контент',
+            group=cls.group_test,
+            author=cls.user_2,
+        )
+        cls.test_follow = Follow.objects.create(
+            user=cls.user_1,
+            author=cls.user_2
+        )
+
+    def test_profile_follow(self):
+        '''Проверка, что пользователь может подписаться'''
+        follow_count = Follow.objects.count()
+        username = self.user_3.username  # type: ignore
+        self.authorized_client_1.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': username}
+        ))
+        self.assertEqual(Follow.objects.count(), follow_count + 1)
+        new_follow = Follow.objects.last()
+        self.assertEqual(new_follow.user, self.user_1)
+        self.assertEqual(new_follow.author, self.user_3)
+
+    def test_profile_unfollow(self):
+        '''Проверка, что пользователь может отписаться'''
+        follow_count = Follow.objects.count()
+        username = self.user_2.username  # type: ignore
+        self.authorized_client_1.get(reverse(
+            'posts:profile_unfollow',
+            kwargs={'username': username}
+        ))
+        self.assertEqual(Follow.objects.count(), follow_count - 1)
+
+    def test_add_post_in_follower(self):
+        '''Проверка, что пост появился у тех, кто подписан'''
+        Follow.objects.create(
+            user=self.user_1,
+            author=self.user_3
+        )
+        new_post = Post.objects.create(
+            text='Тестовый пост контент',
+            group=self.group_test,
+            author=self.user_3
+        )
+        response = self.authorized_client_1.get(reverse('posts:follow_index'))
+        first = response.context['page_obj'][0]
+        self.assertEqual(new_post.text, first.text)
+
+    def test_not_add_post_in_unfollower(self):
+        '''Проверка, что пост не появился у тех, кто не подписан'''
+        posts = Post.objects.filter(author=self.user_2).count()
+        Post.objects.create(
+            text='Тестовый пост контент',
+            group=self.group_test,
+            author=self.user_3
+        )
+        response = self.authorized_client_1.get(reverse('posts:follow_index'))
+        count_posts = len(response.context['page_obj'])
+        self.assertEqual(count_posts, posts)

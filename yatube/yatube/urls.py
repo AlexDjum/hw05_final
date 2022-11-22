@@ -1,8 +1,8 @@
 from django.conf import settings
+from django.conf.urls import handler403, handler404, handler500
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.conf.urls import handler403, handler404, handler500
 
 handler404 = 'core.views.page_not_found'
 handler500 = 'core.views.server_error'
