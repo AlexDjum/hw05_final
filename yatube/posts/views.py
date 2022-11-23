@@ -33,7 +33,6 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()  # type: ignore
-    count = author.posts.count()  # type: ignore
     page_obj = paginator(posts, request, POST_COUNT)
     follow = Follow.objects.filter(author=author)
     following = follow.exists() and request.user.is_authenticated
