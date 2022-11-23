@@ -39,7 +39,6 @@ def profile(request, username):
     following = follow.exists() and request.user.is_authenticated
     context = {
         'page_obj': page_obj,
-        'count': count,
         'author': author,
         'following': following
     }
@@ -110,8 +109,7 @@ def post_delete(request, post_id):
 
 @login_required
 def follow_index(request):
-    user = get_object_or_404(User, username=request.user)
-    posts = Post.objects.filter(author__following__user=user).all()
+    posts = Post.objects.filter(author__following__user=request.user).all()
     page_obj = paginator(posts, request, POST_COUNT)
     context = {
         'page_obj': page_obj,
@@ -132,7 +130,6 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
     query = Follow.objects.filter(user=request.user, author=author)
-    follow = query.exists()
-    if follow:
+    if query.exists():
         query.delete()
     return redirect('posts:follow_index')

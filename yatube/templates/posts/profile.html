@@ -14,7 +14,7 @@
       <h1>
         <center>{{ author.get_full_name }}</center>
       </h1>
-      <h5>Всего постов: {{ count }} </h5>
+      <h5>Всего постов: {{ author.posts.count }} </h5>
       <article>
         {% if user != author %}
         {% if following %}
