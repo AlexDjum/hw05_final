@@ -33,8 +33,6 @@ class CommentCreateExistTest(TestCase):
     def test_view_comment_in_detail_post(self):
         """Проверка, что комментарий появился на странице поста"""
         post_id = self.post_test.pk
-        response = self.authorized_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': post_id}))
         first_objects = Comment.objects.filter(post_id=post_id).first()
         self.assertEqual(first_objects.text, self.comment_test.text)
         self.assertEqual(first_objects.author, self.comment_test.author)
